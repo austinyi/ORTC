@@ -4,6 +4,7 @@ import time
 from utils import get_degree_cost, stochastic_block_model
 
 # Vertex based implementation
+# The weak symmetry condition
 # A1: n1 * n1
 # A2: n2 * n2
 # c: n1 * n2
@@ -60,20 +61,12 @@ def ortc_v1(A1, A2, c):
         for v1 in range(n2):
             for u2 in range(n1):
                 for v2 in range(n2):
-                    if v1 != v2:
-                        cur = np.zeros((n1*n2)**2)
-                        cur[n1*n2*(u1*n2 + v1) + u2*n2 + v2] = 1
-                        cur[n1*n2*(u1*n2 + v2) + u2*n2 + v1] = -1
-                        A.append(list(cur))
-                        b.append(0)
-
-                    if u1 != u2:
-                        cur = np.zeros((n1*n2)**2)
-                        cur[n1*n2*(u1*n2 + v1) + u2*n2 + v2] = 1
-                        cur[n1*n2*(u2*n2 + v1) + u1*n2 + v2] = -1
-                        A.append(list(cur))
-                        b.append(0)
-
+                    cur = np.zeros((n1*n2)**2)
+                    cur[n1*n2*(u1*n2 + v1) + u2*n2 + v2] = 1
+                    cur[n1*n2*(u2*n2 + v2) + u1*n2 + v1] = -1
+                    A.append(list(cur))
+                    b.append(0)
+                    
     # (5)
     bounds = [(0, None) for _ in range((n1*n2)**2)]
 
