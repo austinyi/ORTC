@@ -17,55 +17,36 @@ def entropic_ortc(A1, A2, c, eps, delta=1e-8):
 
     # 1: Initialization
     C = np.zeros((dx, dy, dx, dy))
-    for i in range(dx):
-        for j in range(dy):
-            for k in range(dx):
-                for l in range(dy):
-                    C[i,j,k,l] = math.exp(-(c[i,j]+c[k,l])/eps)
+    C = np.exp(-(c[:, :, np.newaxis, np.newaxis] + c[np.newaxis, np.newaxis, :, :]) / eps)
 
     F = np.zeros((dx, dy, dx))
-    for i in range(dx):
-        for j in range(dy):
-            for k in range(dx):
-                F[i,j,k] = A1[i,k]
+    for j in range(dy):
+        F[:,j,:] = A1[:,:]
 
     G = np.zeros((dx, dy, dy))
     for i in range(dx):
-        for j in range(dy):
-            for l in range(dy):
-                G[i,j,l] = A2[j,l]
+        G[i,:,:] = A2[:,:]
 
     H = np.ones((dx, dy, dx, dy))
 
-    K = 0
-    for i in range(dx):
-        for j in range(dy):
-            for k in range(dx):
-                for l in range(dy):
-                    K += F[i,j,k]*C[i,j,k,l]*G[i,j,l]*H[i,j,k,l]
+    K = np.sum(F[:, :, :, np.newaxis] * C * G[:, :, np.newaxis, :] * H)
     K = 1/K
 
-    w = np.zeros((dx, dy, dx, dy))
-    for i in range(dx):
-        for j in range(dy):
-            for k in range(dx):
-                for l in range(dy):
-                    w[i,j,k,l] = F[i,j,k]*C[i,j,k,l]*G[i,j,l]*H[i,j,k,l]*K
+    w = F[:, :, :, np.newaxis] * C * G[:, :, np.newaxis, :] * H * K
 
-    w_old = np.ones((dx, dy, dx, dy))
-
-    while np.max(np.abs(w - w_old)) > delta:
-        print(np.max(np.abs(w - w_old)))
-        w_old = np.copy(w)
+    #w_old = np.ones((dx, dy, dx, dy))
+    
+    for n in range(niter):
+    #while np.max(np.abs(w - w_old)) > delta:
+        #print(np.max(np.abs(w - w_old)))
+        #w_old = np.copy(w)
 
         # 2: update F
         d = np.sum(w, axis = (2,3))
         for i in range(dx):
             for j in range(dy):
                 for k in range(dx):
-                    t = 0
-                    for l in range(dy):
-                        t += C[i,j,k,l] * G[i,j,l] * H[i,j,k,l] * K
+                    t = np.sum(C[i,j,k,:] * G[i,j,:] * H[i,j,k,:] * K)
                     F[i,j,k] = (d[i,j] * A1[i,k] / d1[i]) / t
 
         # 3: update G
@@ -73,9 +54,7 @@ def entropic_ortc(A1, A2, c, eps, delta=1e-8):
         for i in range(dx):
             for j in range(dy):
                 for l in range(dy):
-                    t = 0
-                    for k in range(dx):
-                        t += C[i,j,k,l] * F[i,j,k] * H[i,j,k,l] * K
+                    t = np.sum(C[i,j,:,l]*F[i,j,:]*H[i,j,:,l]*K)
                     G[i,j,l] = (d[i,j] * A2[j,l] / d2[j]) / t
 
         # 4: update H
@@ -83,24 +62,18 @@ def entropic_ortc(A1, A2, c, eps, delta=1e-8):
             for j in range(dy):
                 for k in range(dx):
                     for l in range(dy):
-                        if F[i,j,k] > 0 and G[i,j,l] > 0:
-                            H[i,j,k,l] = math.sqrt((F[k,l,i] * G[k,l,j]) / (F[i,j,k] * G[i,j,l]))
+                        if i==k and j==l:
+                            H[i,j,k,l] = 1
+                        else:
+                            if F[i,j,k] > 0 and G[i,j,l] > 0:
+                                H[i,j,k,l] = math.sqrt((F[k,l,i] * G[k,l,j]) / (F[i,j,k] * G[i,j,l]))
 
         # 5: update K
-        K = 0
-        for i in range(dx):
-            for j in range(dy):
-                for k in range(dx):
-                    for l in range(dy):
-                        K += F[i,j,k]*C[i,j,k,l]*G[i,j,l]*H[i,j,k,l]
+        K = np.sum(F[:, :, :, np.newaxis] * C * G[:, :, np.newaxis, :] * H)
         K = 1/K
 
-        w = np.zeros((dx, dy, dx, dy))
-        for i in range(dx):
-            for j in range(dy):
-                for k in range(dx):
-                    for l in range(dy):
-                        w[i, j, k, l] = F[i, j, k] * C[i, j, k, l] * G[i, j, l] * H[i, j, k, l] * K
+        #6: update w
+        w = F[:, :, :, np.newaxis] * C * G[:, :, np.newaxis, :] * H * K
 
         # Check for convergence.
 
