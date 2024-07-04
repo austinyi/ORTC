@@ -1,3 +1,7 @@
+# code made by Bongsoo Yi (email: bongsoo@unc.edu) and
+#              Phuong N. Hoang (email: phoang3@charlotte.edu) and
+#              Son Le Thanh (email: sonlt@kth.se)
+
 import math
 import numpy as np
 from numpy.linalg import pinv
