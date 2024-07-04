@@ -1,17 +1,17 @@
-# code made by Bongsoo Yi (email: bongsoo@unc.edu) and
-#              Phuong N. Hoang (email: phoang3@charlotte.edu) and
+# code written by Bongsoo Yi (email: bongsoo@unc.edu), and
+#              Phuong N. Hoang (email: phoang3@charlotte.edu), and
 #              Son Le Thanh (email: sonlt@kth.se)
 
 import math
 import numpy as np
 from numpy.linalg import pinv
 from scipy.optimize import linprog
-import nbimporter
-from utilsSBM import get_degree_cost, adj_to_trans, stochastic_block_model
+from utils import get_degree_cost, adj_to_trans, stochastic_block_model
 import time
 import copy
 
 from ortc_v1 import ortc_v1
+
 
 def entropic_ortc_new(A1, A2, c, eps, niter, delta):
     # A1 -> w1
@@ -58,13 +58,13 @@ def entropic_ortc_new(A1, A2, c, eps, niter, delta):
             mask[i, j, i, j] = False
             
     w_old = np.ones((dx,dy,dx,dy))
-    num_iter = 1
+    num_iter = 0
     
     #storing iterates and cost values
     iter_history = []
     cost_history = []
     
-    iter_history.append(num_iter)
+    iter_history.append(num_iter+1)
     
     for _ in range(niter):
         if np.max(np.abs(w - w_old)) > delta:
@@ -116,19 +116,16 @@ def entropic_ortc_new(A1, A2, c, eps, niter, delta):
             # 6: update w
             w = F[:, :, :, np.newaxis] * C * G[:, :, np.newaxis, :] * H * K
             
-            # 7: store iterations and cost to graph 
-            d_his = np.sum(w, axis=(2, 3))
-            c_his = np.sum(d_his * c)
-            iter_history.append(num_iter)
-            cost_history.append(c_his)
+            # 7: update cost 
+            d = np.sum(w, axis=(2, 3))
+            exp_cost = np.sum(d * c)
+            cost_history.append(exp_cost)
+            iter_history.append(num_iter+1)
         else:
             break
-
-    d = np.sum(w, axis=(2, 3))
-    exp_cost = np.sum(d * c)
-    # c = np.reshape(c, (dx * dy, -1))
-    # print(c)
+    
     return w, exp_cost, num_iter, iter_history, cost_history
+
 
 # generate examples to test
 m1 = 3
@@ -140,9 +137,9 @@ A2 = A2 / np.sum(A2)
 c = get_degree_cost(A1, A2)
 d1 = np.sum(A1, axis=1)
 d2 = np.sum(A2, axis=1)
-
 print(d1)
 print(d2)
+
 
 # test
 start = time.time()
