@@ -69,7 +69,7 @@ def entropic_ortc_new(A1, A2, c, eps, niter, delta):
     for _ in range(niter):
         if np.max(np.abs(w - w_old)) > delta:
             num_iter += 1
-        #print(np.max(np.abs(w - w_old)))
+            #print(np.max(np.abs(w - w_old)))
             w_old = np.copy(w)
 
             # 2: update F
