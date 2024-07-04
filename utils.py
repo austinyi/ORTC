@@ -117,3 +117,19 @@ def check_isomorphism(idx, A1, A2):
             return False
 
     return True
+
+def get_zero_one_cost(A1, A2):
+    n1 = A1.shape[0]
+    n2 = A2.shape[0]
+
+    # Compute node degrees.
+    degrees1 = np.sum(A1, axis=1)
+    degrees2 = np.sum(A2, axis=1)
+
+    # Construct matrix.
+    cost_mat = np.zeros((n1, n2))
+    for i in range(n1):
+        for j in range(n2):
+            if degrees1[i] != degrees2[j]:
+                cost_mat[i,j] = 1
+    return cost_mat
