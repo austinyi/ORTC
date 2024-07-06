@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 from utils import get_degree_cost, stochastic_block_model
+
 from ortools.linear_solver import pywraplp
 
 # Edge based implementation
@@ -11,16 +12,11 @@ from ortools.linear_solver import pywraplp
 # c: (n1, n2)
 # [i][j]: i*ne2 + j
 
-def glop_v2(A1, A2, c):
+def glop_v2_new(A1, A2, c):
 
     # Number of nodes
     n1 = A1.shape[0]
     n2 = A2.shape[0]
-
-    # Check A1 and A2 are symmetric
-    if not np.allclose(A1, A1.T, rtol=1e-05, atol=1e-08) or not np.allclose(A2, A2.T, rtol=1e-05, atol=1e-08):
-        print("The adjacency matrix is not symmetric.")
-        return
 
     # Ensure each graph has a total degree of 1
     A1 = A1 / np.sum(A1)
@@ -93,6 +89,7 @@ def glop_v2(A1, A2, c):
             var_flow.append(solver.NumVar(0, solver.Infinity(),
                                           name=f"var_{src_idx}, {dest_idx}"))
 
+    #print("Number of variables =", solver.NumVariables())
 
     constraints = []
 
@@ -110,6 +107,7 @@ def glop_v2(A1, A2, c):
             for src_idx in range(ne1):
                 for dest_idx in range(ne2):
                     constraints[-1].SetCoefficient(var_flow[src_idx * ne2 + dest_idx], cur[src_idx * ne2 + dest_idx])
+
 
     # (2) Transition coupling condition
     for i in range(ne2):
@@ -137,6 +135,10 @@ def glop_v2(A1, A2, c):
             constraints[-1].SetCoefficient(var_flow[i*ne2 + j], 1)
             constraints[-1].SetCoefficient(var_flow[(i+1) * ne2 + (j+1)], -1)
 
+            # for src_idx in range(ne1):
+            #     for dest_idx in range(ne2):
+            #         constraints[-1].SetCoefficient(var_flow[src_idx * ne2 + dest_idx], cur[src_idx * ne2 + dest_idx])
+
             cur = np.zeros(ne1 * ne2)
             cur[(i+1)*ne2 + j] = 1
             cur[i * ne2 + (j+1)] = -1
@@ -145,9 +147,10 @@ def glop_v2(A1, A2, c):
             constraints[-1].SetCoefficient(var_flow[(i+1)*ne2 + j], 1)
             constraints[-1].SetCoefficient(var_flow[i * ne2 + (j+1)], -1)
 
+
     # (4) Normalization
     solver.Add(solver.Sum(var_flow) == 1)
-
+    #print("Number of constraints =", solver.NumConstraints())
 
     # Create objective function
     obj_expr = []
@@ -170,3 +173,26 @@ def glop_v2(A1, A2, c):
         return status, None, None
 
 
+
+if __name__ == "__main__":
+    # gather data
+    m1 = 3
+    m2 = 3
+    A1 = stochastic_block_model(np.array([m1, m1, m1, m1]), np.array(
+        [[1, 0.1, 0.1, 0.1], [0.1, 0.9, 0.1, 0.1], [0.1, 0.1, 0.8, 0.1], [0.1, 0.1, 0.1, 0.7]]))
+    A2 = stochastic_block_model(np.array([m2, m2, m2, m2]), np.array(
+        [[1, 0.1, 0.1, 0.1], [0.1, 0.9, 0.1, 0.1], [0.1, 0.1, 0.8, 0.1], [0.1, 0.1, 0.1, 0.7]]))
+    c0 = get_degree_cost(A1, A2)
+    #
+    # with open("A1", "wb") as fp:  # Pickling
+    #     pickle.dump(A1, fp)
+    # with open("A2", "wb") as fp:  # Pickling
+    #     pickle.dump(A2, fp)
+
+    # with open("A1", "rb") as fp:  # Unpickling
+    #     A1 = pickle.load(fp)
+    # with open("A2", "rb") as fp:  # Unpickling
+    #     A2 = pickle.load(fp)
+    # print(A1)
+    # print(A2)
+    # c0 = get_degree_cost(A1, A2)

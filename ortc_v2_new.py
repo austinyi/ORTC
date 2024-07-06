@@ -12,16 +12,11 @@ from utils import get_degree_cost, stochastic_block_model
 # c: (n1, n2)
 # [i][j]: i*ne2 + j
 
-def ortc_v2(A1, A2, c):
+def ortc_v2_new(A1, A2, c):
 
     # Number of nodes
     n1 = A1.shape[0]
     n2 = A2.shape[0]
-
-    # Check A1 and A2 are symmetric
-    if not np.allclose(A1, A1.T, rtol=1e-05, atol=1e-08) or not np.allclose(A2, A2.T, rtol=1e-05, atol=1e-08):
-        print("The adjacency matrix is not symmetric.")
-        return
 
     # Ensure each graph has a total degree of 1
     A1 = A1 / np.sum(A1)
@@ -39,6 +34,7 @@ def ortc_v2(A1, A2, c):
     # ne: number of edges
     # connect: a dictionary where each key is a vertex in the network.
     #           The corresponding value for each vertex key is a list of edge indices that include that vertex.
+
 
     edges1 = []
     edge_weights1 = []
@@ -89,6 +85,7 @@ def ortc_v2(A1, A2, c):
             A.append(list(cur))
             b.append(0)
 
+
     # (2) Transition coupling condition
     for i in range(ne2):
         for u1 in range(n1):
@@ -122,7 +119,7 @@ def ortc_v2(A1, A2, c):
     # (5) Non-negative
     bounds = [(0, None) for _ in range(ne1*ne2)]
 
-    # Cost function c (n1*n2)
+    # cost function c (n1*n2)
     c_reshape = np.zeros(ne1*ne2)
     for i, (u1, u2) in enumerate(edges1):
         for j, (v1, v2) in enumerate(edges2):
@@ -131,7 +128,6 @@ def ortc_v2(A1, A2, c):
     res = linprog(c_reshape, A_eq = A, b_eq = b, bounds = bounds)
 
     return (res.fun, res.x) if res.success else (None, None)
-
 
 if __name__ == "__main__":
     m1 = 3
