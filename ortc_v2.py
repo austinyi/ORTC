@@ -144,9 +144,9 @@ if __name__ == "__main__":
     c = get_degree_cost(A1, A2)
 
     start = time.time()
-    AA, BB = ortc_v2_new(A1, A2, c)
-    print(AA)
+    exp_cost, weight = ortc_v2(A1, A2, c)
     end = time.time()
+    print(exp_cost)
     print(end - start)
 
 

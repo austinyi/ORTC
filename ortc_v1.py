@@ -88,6 +88,8 @@ if __name__ == "__main__":
     m2 = 2
     A1 = stochastic_block_model(np.array([m1,m1,m1,m1]), np.array([[1,0.1,0.1,0.1],[0.1,0.9,0.1,0.1],[0.1,0.1,0.8,0.1],[0.1,0.1,0.1,0.7]]))
     A2 = stochastic_block_model(np.array([m2,m2,m2,m2]), np.array([[1,0.1,0.1,0.1],[0.1,0.9,0.1,0.1],[0.1,0.1,0.8,0.1],[0.1,0.1,0.1,0.7]]))
+    A1 = A1 / np.sum(A1)
+    A2 = A2 / np.sum(A2)
     c = get_degree_cost(A1, A2)
 
     start = time.time()
