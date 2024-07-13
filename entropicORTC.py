@@ -12,7 +12,7 @@ import copy
 
 from ortc_v1 import ortc_v1
 
-def entropic_ortc_new(A1, A2, c, eps, niter, delta):
+def entropic_ortc(A1, A2, c, eps, niter, delta):
     dx, _ = A1.shape
     dy, _ = A2.shape
 
@@ -118,7 +118,7 @@ print(d2)
 
 # test with entropicORTC
 start = time.time()
-w, exp_cost, n, iter_his, cost_his = entropic_ortc_new(A1, A2, c, 0.0001, 10000, 1e-10)
+w, exp_cost, n, iter_his, cost_his = entropic_ortc(A1, A2, c, 0.0001, 10000, 1e-10)
 print(exp_cost)
 end = time.time()
 print(end - start)
