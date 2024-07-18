@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from scipy.special import logsumexp
-from utilsSBM import get_degree_cost, stochastic_block_model
+from utils import get_degree_cost, stochastic_block_model
 import time
 import copy
 
@@ -90,7 +90,6 @@ A2 = A2 / np.sum(A2)
 c = get_degree_cost(A1, A2)
 d1 = np.sum(A1, axis=1)
 d2 = np.sum(A2, axis=1)
-
 print(d1)
 print(d2)
 
