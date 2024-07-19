@@ -133,3 +133,19 @@ def get_zero_one_cost(A1, A2):
             if degrees1[i] != degrees2[j]:
                 cost_mat[i,j] = 1
     return cost_mat
+
+
+def is_connected(adj_matrix):
+    def dfs(v, visited):
+        visited[v] = True
+        for i, weight in enumerate(adj_matrix[v]):
+            if weight > 0 and not visited[i]:
+                dfs(i, visited)
+
+    n = adj_matrix.shape[0]
+    visited = np.zeros(n, dtype=bool)
+
+    # Start DFS from the first vertex (index 0)
+    dfs(0, visited)
+
+    return np.all(visited)
