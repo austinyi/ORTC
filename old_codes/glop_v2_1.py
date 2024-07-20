@@ -6,6 +6,8 @@ import pickle
 
 from ortools.linear_solver import pywraplp
 
+### STRONG SYMMETRY CONDITION
+
 def glop_v2(A1, A2, c0):
     # Number of nodes
     n1 = A1.shape[0]
