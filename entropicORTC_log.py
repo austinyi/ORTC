@@ -80,23 +80,21 @@ def entropic_ortc_log(A1, A2, c, eps, niter, delta):
 
     return w, exp_cost, num_iter, iter_history, cost_history
 
-# generate examples
-m1 = 3
-m2 = 2
-A1 = stochastic_block_model(np.array([m1,m1,m1,m1]), np.array([[1,0.1,0.1,0.1],[0.1,0.9,0.1,0.1],[0.1,0.1,0.8,0.1],[0.1,0.1,0.1,0.7]]))
-A2 = stochastic_block_model(np.array([m2,m2,m2,m2]), np.array([[1,0.1,0.1,0.1],[0.1,0.9,0.1,0.1],[0.1,0.1,0.8,0.1],[0.1,0.1,0.1,0.7]]))
-A1 = A1 / np.sum(A1)
-A2 = A2 / np.sum(A2)
-c = get_degree_cost(A1, A2)
-d1 = np.sum(A1, axis=1)
-d2 = np.sum(A2, axis=1)
-print(d1)
-print(d2)
 
-# test
-start = time.time()
-w, exp_cost, n, iter_his, cost_his = entropic_ortc_log(A1, A2, c, 0.0001, 10, 1e-10)
-end = time.time()
-print(exp_cost)
-print(n)
-print(end - start)
+if __name__ == "__main__":
+    # generate examples
+    m1 = 3
+    m2 = 2
+    A1 = stochastic_block_model(np.array([m1,m1,m1,m1]), np.array([[1,0.1,0.1,0.1],[0.1,0.9,0.1,0.1],[0.1,0.1,0.8,0.1],[0.1,0.1,0.1,0.7]]))
+    A2 = stochastic_block_model(np.array([m2,m2,m2,m2]), np.array([[1,0.1,0.1,0.1],[0.1,0.9,0.1,0.1],[0.1,0.1,0.8,0.1],[0.1,0.1,0.1,0.7]]))
+    A1 = A1 / np.sum(A1)
+    A2 = A2 / np.sum(A2)
+    c = get_degree_cost(A1, A2)
+
+    # test
+    start = time.time()
+    w, exp_cost, n, iter_his, cost_his = entropic_ortc_log(A1, A2, c, 0.0001, 10, 1e-10)
+    end = time.time()
+    print(exp_cost)
+    print(n)
+    print(end - start)
