@@ -1,7 +1,7 @@
 import numpy as np
 from ortools.linear_solver import pywraplp
 
-# Incomplete
+### Incomplete
 
 def glop_v1(A1, A2, c):
     # Number of nodes
@@ -108,13 +108,13 @@ def glop_v1(A1, A2, c):
 
     status = solver.Solve()
 
-    #opt_flow = []
+    opt_flow = []
     if status == pywraplp.Solver.OPTIMAL:
         #print(f"optimal obj = {solver.Objective().Value()}")
-        # for src_idx in range(ne1):
-        #     opt_vals = [var_flow[src_idx * ne2 + dest_idx].solution_value()
-        #                 for dest_idx in range(ne2)]
-        #     opt_flow.append(opt_vals)
-        return status, solver.Objective().Value()
+        for src_idx in range(n1):
+            opt_vals = [var_flow[src_idx * n2 + dest_idx].solution_value()
+                        for dest_idx in range(n2)]
+            opt_flow.append(opt_vals)
+        return status, solver.Objective().Value(), opt_flow
     else:
-        return status, None
+        return status, None, None
