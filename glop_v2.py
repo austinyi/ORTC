@@ -13,7 +13,7 @@ import time
 # c: (n1, n2)
 # [i][j]: i*ne2 + j
 
-def glop_v2(A1, A2, c):
+def glop_v2(A1, A2, c, vertex=False):
     # Number of nodes
     n1 = A1.shape[0]
     n2 = A2.shape[0]
@@ -197,7 +197,17 @@ def glop_v2(A1, A2, c):
             opt_vals = [var_flow[src_idx * ne2 + dest_idx].solution_value()
                         for dest_idx in range(ne2)]
             opt_flow.append(opt_vals)
-        return status, solver.Objective().Value(), opt_flow
+        if vertex:
+            weight = np.zeros((n1, n2, n1, n2))
+            for i in range(ne1):
+                for j in range(ne2):
+                    u1, u2 = edges1[i]
+                    v1, v2 = edges2[j]
+                    weight[u1,v1,u2,v2] = opt_flow[i][j]
+                    weight[u2,v2,u1,v1] = opt_flow[i][j]     
+            return status, solver.Objective().Value(), weight
+        else:
+            return status, solver.Objective().Value(), opt_flow
     else:
         return status, None, None
 
