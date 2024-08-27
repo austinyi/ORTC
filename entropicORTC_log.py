@@ -1,10 +1,7 @@
-import math
 import numpy as np
 from scipy.special import logsumexp
 from utils import get_degree_cost, stochastic_block_model
 import time
-import copy
-
 
 def entropic_ortc_log(A1, A2, c, eps, niter, delta):
     dx, _ = A1.shape
