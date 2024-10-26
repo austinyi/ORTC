@@ -1,6 +1,6 @@
 import numpy as np
 import itertools
-from utils import get_degree_cost, stochastic_block_model
+from .utils import get_degree_cost, stochastic_block_model
 from ortools.linear_solver import pywraplp
 import time
 

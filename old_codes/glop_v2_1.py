@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import itertools
-from utils import get_degree_cost, stochastic_block_model
+from ortc.utils import get_degree_cost, stochastic_block_model
 import pickle
 
 from ortools.linear_solver import pywraplp

@@ -2,7 +2,7 @@ import numpy as np
 from numpy.linalg import pinv
 from scipy.optimize import linprog
 import copy
-from utils import get_degree_cost, adj_to_trans, stochastic_block_model
+from .utils import get_degree_cost, adj_to_trans, stochastic_block_model
 import time
 
 

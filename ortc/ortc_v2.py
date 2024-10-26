@@ -2,7 +2,7 @@ from scipy.optimize import linprog
 import numpy as np
 import time
 import itertools
-from utils import get_degree_cost, stochastic_block_model
+from .utils import get_degree_cost, stochastic_block_model
 
 # Edge based implementation
 ### Weak symmetry condition
@@ -12,7 +12,7 @@ from utils import get_degree_cost, stochastic_block_model
 # c: (n1, n2)
 # [i][j]: i*ne2 + j
 
-def ortc_v2(A1, A2, c):
+def ortc_v2(A1, A2, c, vertex=False):
 
     # Number of nodes
     n1 = A1.shape[0]
@@ -130,7 +130,19 @@ def ortc_v2(A1, A2, c):
 
     res = linprog(c_reshape, A_eq = A, b_eq = b, bounds = bounds)
 
-    return (res.fun, res.x) if res.success else (None, None)
+    if vertex:
+        weight = np.zeros((n1, n2, n1, n2))
+        for i in range(ne1):
+            for j in range(ne2):
+                u1, u2 = edges1[i]
+                v1, v2 = edges2[j]
+                weight[u1,v1,u2,v2] = res.x[i*ne2 + j]
+                weight[u2,v2,u1,v1] = res.x[i*ne2 + j]     
+        return (res.fun, weight) if res.success else (None, None)
+    else:
+        return (res.fun, res.x) if res.success else (None, None)
+
+
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import logsumexp
-from utils import get_degree_cost, stochastic_block_model
+from .utils import get_degree_cost, stochastic_block_model
 import time
 
 def entropic_ortc_log(A1, A2, c, eps, niter, delta):

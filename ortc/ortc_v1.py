@@ -1,7 +1,7 @@
 from scipy.optimize import linprog
 import numpy as np
 import time
-from utils import get_degree_cost, stochastic_block_model
+from .utils import get_degree_cost, stochastic_block_model
 
 # Vertex based implementation
 # Weak symmetry condition
