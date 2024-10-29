@@ -7,6 +7,7 @@ from numpy.linalg import pinv
 import ot
 import copy
 from ortools.linear_solver import pywraplp
+from scipy.optimize import linprog
 
 def get_ind_tc(Px, Py):
     dx, dx_col = Px.shape
@@ -36,66 +37,92 @@ def get_stat_dist(Pz):
     return stationary_dist
 
 
-
 def get_best_stat_dist(P, c):
+    # Set up constraints.
     n = P.shape[0]
-    c = c.reshape(n, -1).flatten()  
-    
-    # Create the linear solver with the GLOP 
-    solver = pywraplp.Solver.CreateSolver('GLOP')
-    
-    # Decision variables: stat_dist[i]
-    stat_dist = [solver.NumVar(0.0, solver.infinity(), f'stat_dist_{i}') for i in range(n)]
+    c = c.reshape(n, -1).flatten()  # Ensure c is a flat array of length n
 
-    # Constraints: (P' - I) * stat_dist = 0
-    for i in range(n):
-        constraint_expr = solver.Sum((P[j, i] - (1.0 if i == j else 0.0)) * stat_dist[j] for j in range(n))
-        solver.Add(constraint_expr == 0)
+    Aeq = np.vstack([P.T - np.eye(n), np.ones((1, n))])
+    beq = np.hstack([np.zeros(n), [1]])
 
-    # Constraint: sum(stat_dist) == 1
-    solver.Add(solver.Sum(stat_dist) == 1)
+    # Define lower bounds
+    lb = np.zeros(n)
+    bounds = [(lb_i, None) for lb_i in lb]  # Upper bounds are None (unbounded)
 
-    # Create objective function
-    solver.Minimize(solver.Sum(stat_dist * c))
+    # Define options.
+    options = {'disp': False, 'presolve': False}
 
-    # Solve the problem.
-    status = solver.Solve()
+    # Solve linear program.
+    res = linprog(c, A_eq=Aeq, b_eq=beq, bounds=bounds, method='highs', options=options)
 
-    if status == pywraplp.Solver.OPTIMAL:
-        stat_dist_values = np.array([var.solution_value() for var in stat_dist])
-        exp_cost = solver.Objective().Value()
-        return stat_dist_values, exp_cost
+    if res.success:
+        stat_dist = res.x
+        exp_cost = res.fun
     else:
-        # In case the solver fails, try rescaling constraints.
-        alpha = 1
-        while alpha >= 1e-10:
-            alpha /= 10
-            # Create a new solver instance to reset all variables and constraints.
-            solver = pywraplp.Solver.CreateSolver('GLOP')
+        stat_dist = None
+        exp_cost = None
 
-            # Decision variables: stat_dist[i]
-            stat_dist = [solver.NumVar(0.0, solver.infinity(), f'stat_dist_{i}') for i in range(n)]
+    return stat_dist, exp_cost
 
-            # Constraints: alpha * (P' - I) * stat_dist = 0
-            for i in range(n):
-                constraint_expr = solver.Sum(alpha * (P[j, i] - (1.0 if i == j else 0.0)) * stat_dist[j] for j in range(n))
-                solver.Add(constraint_expr == 0)
+# def get_best_stat_dist(P, c):
+#     n = P.shape[0]
+#     c = c.reshape(n, -1).flatten()  
+    
+#     # Create the linear solver with the GLOP 
+#     solver = pywraplp.Solver.CreateSolver('GLOP')
+    
+#     # Decision variables: stat_dist[i]
+#     stat_dist = [solver.NumVar(0.0, solver.infinity(), f'stat_dist_{i}') for i in range(n)]
 
-            # Constraint: alpha * sum(stat_dist) == alpha
-            solver.Add(solver.Sum([alpha * var for var in stat_dist]) == alpha)
+#     # Constraints: (P' - I) * stat_dist = 0
+#     for i in range(n):
+#         constraint_expr = solver.Sum((P[j, i] - (1.0 if i == j else 0.0)) * stat_dist[j] for j in range(n))
+#         solver.Add(constraint_expr == 0)
 
-            # Create objective function
-            solver.Minimize(solver.Sum(stat_dist * c))
+#     # Constraint: sum(stat_dist) == 1
+#     solver.Add(solver.Sum(stat_dist) == 1)
 
-            # Solve the problem again.
-            status = solver.Solve()
-            if status == pywraplp.Solver.OPTIMAL:
-                stat_dist_values = np.array([var.solution_value() for var in stat_dist])
-                exp_cost = solver.Objective().Value()
-                return stat_dist_values, exp_cost
+#     # Create objective function
+#     solver.Minimize(solver.Sum(stat_dist * c))
 
-        # If still no solution, raise an error.
-        raise ValueError('Failed to compute stationary distribution.')
+#     # Solve the problem.
+#     status = solver.Solve()
+
+#     if status == pywraplp.Solver.OPTIMAL:
+#         stat_dist_values = np.array([var.solution_value() for var in stat_dist])
+#         exp_cost = solver.Objective().Value()
+#         return stat_dist_values, exp_cost
+#     else:
+#         # In case the solver fails, try rescaling constraints.
+#         alpha = 1
+#         while alpha >= 1e-10:
+#             alpha /= 10
+#             # Create a new solver instance to reset all variables and constraints.
+#             solver = pywraplp.Solver.CreateSolver('GLOP')
+
+#             # Decision variables: stat_dist[i]
+#             stat_dist = [solver.NumVar(0.0, solver.infinity(), f'stat_dist_{i}') for i in range(n)]
+
+#             # Constraints: alpha * (P' - I) * stat_dist = 0
+#             for i in range(n):
+#                 constraint_expr = solver.Sum(alpha * (P[j, i] - (1.0 if i == j else 0.0)) * stat_dist[j] for j in range(n))
+#                 solver.Add(constraint_expr == 0)
+
+#             # Constraint: alpha * sum(stat_dist) == alpha
+#             solver.Add(solver.Sum([alpha * var for var in stat_dist]) == alpha)
+
+#             # Create objective function
+#             solver.Minimize(solver.Sum(stat_dist * c))
+
+#             # Solve the problem again.
+#             status = solver.Solve()
+#             if status == pywraplp.Solver.OPTIMAL:
+#                 stat_dist_values = np.array([var.solution_value() for var in stat_dist])
+#                 exp_cost = solver.Objective().Value()
+#                 return stat_dist_values, exp_cost
+
+#         # If still no solution, raise an error.
+#         raise ValueError('Failed to compute stationary distribution.')
 
 
 def computeot_pot(C, r, c):
@@ -202,6 +229,33 @@ def exact_otc(Px, Py, c):
             stat_dist, exp_cost = get_best_stat_dist(P, c)
             #stat_dist = np.reshape(stat_dist, (dy, dx)).T
             stat_dist = np.reshape(stat_dist, (dx, dy))
+            return iter_ctr, exp_cost, P, stat_dist
+
+    return None, None, None, None
+
+def exact_otc2(Px, Py, c):
+    dx = Px.shape[0]
+    dy = Py.shape[0]
+
+    P_old = np.ones((dx*dy, dx*dy))
+    P = get_ind_tc(Px, Py)
+    iter_ctr = 0
+    while np.max(np.abs(P-P_old)) > 1e-10:
+        iter_ctr += 1
+        P_old = np.copy(P)
+
+        # Transition coupling evaluation.
+        g, h = exact_tce(P, c)
+
+        # Transition coupling improvement.
+        P = exact_tci(g, h, P_old, Px, Py)
+
+        # Check for convergence.
+        if np.all(P == P_old):
+            stat_dist = get_stat_dist(P)
+            #stat_dist = np.reshape(stat_dist, (dy, dx)).T
+            stat_dist = np.reshape(stat_dist, (dx, dy))
+            exp_cost = np.sum(stat_dist * c)
             return iter_ctr, exp_cost, P, stat_dist
 
     return None, None, None, None
